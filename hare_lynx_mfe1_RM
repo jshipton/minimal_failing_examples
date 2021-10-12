@@ -1,0 +1,61 @@
+# -*- coding: utf-8 -*-
+
+#Import the required modules
+import pandas as pd
+import numpy as np
+import matplotlib.pyplot as plt
+
+#Call the data
+data = pd.read_csv("hare_lynx.csv")
+H = data["hare"] #raw Hare data
+L = data["lynx"] #raw Lynx data
+t = data["year"] #years
+N = len(t)
+
+# Initialise parameters
+a = 2
+b = 0.05
+c = 0.6
+d = 0.01
+t0 = 0
+t_max = 100
+dt = 0.01
+steps = int((t_max - t0)/dt)
+years = np.linspace(t[0], t[len(t)-1], num=steps+1)
+
+#Initialise Hare data
+H_new = []
+H_new.append(H[0])
+H_t = H_new[0]
+
+#Initialise Lynx data
+L_new = []
+L_new.append(L[0])
+L_t = L_new[0]
+
+#Equations
+def hares(H_t, L_t, dt, a, b):
+    H_tprime = H_t + (a * H_t * dt) - (b * H_t * L_t * dt)
+    return H_tprime
+
+def lynx(H_t, L_t, dt, c, d):
+    L_tprime = L_t + (d * L_t * H_t * dt) - (c * L_t * dt)
+    return L_tprime
+
+def res(x,y):
+    data["residual"] = x - y #distance from actual line
+    data.plot(x="year", y="residual", kind="bar")
+    return data["residual"]
+
+def err(x,y):
+    error = (1/N)*np.sum((x - y)) #mean squared error equation
+    return error
+
+for i in range(steps):
+   H_tprime = hares(H_new[i-1], L_new[i-1], dt, a, b)
+   H_new.append(H_tprime)
+
+   L_tprime = lynx(H_new[i], L_new[i-1], dt, c, d)
+   L_new.append(L_tprime)
+
+plt.plot(years, L_new, label="simulated data")
